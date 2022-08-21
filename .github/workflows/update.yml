@@ -38,6 +38,7 @@ jobs:
         wget https://pkgs.racket-lang.org/pkgs-all
 
         nix run -L github:$GITHUB_REPOSITORY
+        nix flake update
 
         git add .
         git commit -m "$(date)"
