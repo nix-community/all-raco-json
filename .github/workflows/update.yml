@@ -31,7 +31,7 @@ jobs:
     - name: run updater app
       run: |
         set -x
-        git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+        git config --local user.email "<>"
         git config --local user.name "github-actions[bot]"
 
         rm pkgs-all
