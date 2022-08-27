@@ -7,10 +7,10 @@
 (define (to-json input-path output-path)
   (with-output-to-file output-path
     (lambda ()
-      (let* ((inp0 (with-input-from-file input-path read))
-             (inp1 (reshape-dependencies inp0))
-             (inp2 (string-keys-to-symbol-keys inp1))
-             (inp3 (symbol-values-to-string-values inp2)))
+      (let* ([inp0 (with-input-from-file input-path read)]
+             [inp1 (reshape-dependencies inp0)]
+             [inp2 (string-keys-to-symbol-keys inp1)]
+             [inp3 (symbol-values-to-string-values inp2)])
         (write-json inp3)))
     #:exists 'replace))
 
