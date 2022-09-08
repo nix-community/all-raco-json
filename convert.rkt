@@ -1,5 +1,6 @@
 #lang racket/base
 
+(require racket/file)
 (require racket/function)
 (require racket/match)
 (require racket/sequence)
@@ -7,6 +8,35 @@
 (require racket/stream)
 
 (define main-tags '("main-distribution" "main-tests"))
+
+;; Given a pkgs-all file, remove select nodes and also
+;; generate files according to the catalog directory structure
+(define (write-catalog pkgs-all-input-path)
+  (let* ([original-ht (with-input-from-file pkgs-all-input-path read)]
+         [admissible-pkg-set (keep-only-admissible-pkgs (keep-only-relevant-deps (reshape-dependencies original-ht)))]
+         [final-ht (make-immutable-hash
+                    (set-map admissible-pkg-set
+                             (lambda (pkg-name)
+                               `(,pkg-name . ,(hash-ref original-ht pkg-name)))))])
+    (with-output-to-file "pkgs-all"
+      (lambda ()
+        (write final-ht))
+      #:exists 'replace)
+
+    (with-output-to-file "pkgs"
+      (lambda ()
+        (write (hash-keys final-ht)))
+      #:exists 'replace)
+
+    (when (directory-exists? "pkg/")
+      (delete-directory/files "pkg/"))
+    (make-directory "pkg/")
+
+    (hash-for-each final-ht
+                   (lambda (pkg-name pkg-hash-table)
+                     (with-output-to-file (string-append-immutable "pkg/" pkg-name)
+                       (lambda ()
+                         (write pkg-hash-table)))))))
 
 (define (reshape-dependencies ht)
   (hash-map/copy ht
