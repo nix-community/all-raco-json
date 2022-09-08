@@ -21,7 +21,7 @@
         converter = pkgs.writeScriptBin "convert-catalog-to-json" ''
           #!/usr/bin/env bash
           set -eou pipefail
-          ${pkgs.racket}/bin/racket -e '(require (file "convert.rkt")) (to-json "pkgs-all" "pkgs-all.json")'
+          ${pkgs.racket}/bin/racket -e '(require (file "convert.rkt"))'
         '';
       in
         {
