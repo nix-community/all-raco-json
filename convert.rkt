@@ -120,13 +120,12 @@
 (define (keep-only-admissible-pkgs ht)
   (letrec ([reverse-graph-with-dummy-node (make-reverse-graph-with-dummy-node ht)]
            [dfs (lambda (u seen-nodes)
-                  (foldl (lambda (v prev-seen-nodes)
-                           (if (set-member? prev-seen-nodes v)
-                               prev-seen-nodes
-                               (dfs v (set-add prev-seen-nodes v))))
-                         seen-nodes
-                         (hash-ref reverse-graph-with-dummy-node u)))]
-           [inadmissible-packages (dfs DUMMY-PKG (set DUMMY-PKG))])
+                  (if (set-member? seen-nodes u)
+                      seen-nodes
+                      (foldl dfs
+                             (set-add seen-nodes u)
+                             (hash-ref reverse-graph-with-dummy-node u))))]
+           [inadmissible-packages (dfs DUMMY-PKG (set))])
     (set-subtract (list->set (hash-keys reverse-graph-with-dummy-node))
                   inadmissible-packages)))
 
