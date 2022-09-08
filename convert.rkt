@@ -158,22 +158,28 @@
                                (dfs v (set-add prev-seen-nodes v))))
                          seen-nodes
                          (hash-ref reverse-graph-with-dummy-node u)))]
-           [inadmissible-packages (dfs DUMMY-PKG (set DUMMY-PKG))]
-           [admissible-packages (set-subtract (list->set (hash-keys reverse-graph-with-dummy-node))
-                                              inadmissible-packages)])
-    (make-immutable-hash (set-map admissible-packages
-                                  (lambda (pkg-name)
-                                    (cons pkg-name (hash-ref ht pkg-name)))))))
+           [inadmissible-packages (dfs DUMMY-PKG (set DUMMY-PKG))])
+    (set-subtract (list->set (hash-keys reverse-graph-with-dummy-node))
+                  inadmissible-packages)))
 
 (define (test-keep-only-admissible-pkgs)
   (let* ([ht (with-input-from-file "pkgs-all" read)]
+         [bundled-tags '("main-distribution" "main-test")]
          [relevant-packages-ht (keep-only-relevant-deps (reshape-dependencies ht))]
          [admissible-packages (keep-only-admissible-pkgs relevant-packages-ht)])
-    (sequence-fold (match-lambda** [(acc _pkg-name (hash-table ('dependencies dependencies)))
-                                    (sequence-fold (lambda (accum dep-name _)
-                                                     (and accum
-                                                          (hash-has-key? admissible-packages dep-name)))
-                                                   acc
-                                                   dependencies)])
+    (sequence-fold (lambda (acc pkg-name)
+                     (sequence-fold (lambda (accum dep)
+                                      (and accum
+                                           (let ([dep-name (match dep
+                                                             [(cons name _) name]
+                                                             [name name])])
+                                             (or
+                                              (string=? dep-name "racket")
+                                              (ormap (lambda (tag)
+                                                       (member tag bundled-tags))
+                                                     (hash-ref (hash-ref ht dep-name) 'tags))
+                                              (set-member? admissible-packages dep-name)))))
+                                    acc
+                                    (hash-ref (hash-ref ht pkg-name) 'dependencies)))
                    #t
                    admissible-packages)))
