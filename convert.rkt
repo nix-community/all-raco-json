@@ -6,6 +6,8 @@
 (require racket/set)
 (require racket/stream)
 
+(define main-tags '("main-distribution" "main-tests"))
+
 (define (reshape-dependencies ht)
   (hash-map/copy ht
                  (lambda (pkg-name pkg-hash-table)
@@ -27,14 +29,13 @@
 ;; 1. does not have any packages tagged "main-distribution" or "main-test"
 ;; 2. ensures that any such packages are also removed from the dependency list of all remaining packages
 (define (keep-only-relevant-deps ht)
-  (let* ([bundled-tags '("main-distribution" "main-test")]
-         [all-package-names (apply set (hash-keys ht))]
+  (let* ([all-package-names (apply set (hash-keys ht))]
          [bundled-packages (set-add (apply set (stream->list
                                                 (sequence-filter
                                                  (lambda (pkg-name)
                                                    (ormap (lambda (tag)
                                                             ;; XXX: would prefer to use memq, but tag is mutable for some reason
-                                                            (member tag bundled-tags))
+                                                            (member tag main-tags))
                                                           (hash-ref (hash-ref ht pkg-name) 'tags)))
                                                  all-package-names)))
                                     ;; Some people add racket itself as a dependency for some reason
@@ -131,7 +132,6 @@
 
 (define (test-keep-only-admissible-pkgs)
   (let* ([ht (with-input-from-file "pkgs-all" read)]
-         [bundled-tags '("main-distribution" "main-test")]
          [relevant-packages-ht (keep-only-relevant-deps (reshape-dependencies ht))]
          [admissible-packages (keep-only-admissible-pkgs relevant-packages-ht)])
     (sequence-fold (lambda (acc pkg-name)
@@ -143,7 +143,7 @@
                                              (or
                                               (string=? dep-name "racket")
                                               (ormap (lambda (tag)
-                                                       (member tag bundled-tags))
+                                                       (member tag main-tags))
                                                      (hash-ref (hash-ref ht dep-name) 'tags))
                                               (set-member? admissible-packages dep-name)))))
                                     acc
