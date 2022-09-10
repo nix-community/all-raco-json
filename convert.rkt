@@ -69,16 +69,14 @@
                                                (member tag main-tags))
                                              (hash-ref (hash-ref ht pkg-name) 'tags)))
                                     all-package-names)))]
-         [relevant-packages (set->list (set-subtract all-package-names
-                                                     bundled-packages))])
-    (make-immutable-hash (map (lambda (pkg-name)
-                                (let* ([pkg-hash-table (hash-ref ht pkg-name)]
-                                       [pkg-kept-deps (filter (lambda (pkg-name)
-                                                                (not (set-member? bundled-packages pkg-name)))
-                                                              (hash-ref pkg-hash-table 'dependencies))])
-                                  (cons pkg-name
-                                        (hash-set pkg-hash-table 'dependencies pkg-kept-deps))))
-                              relevant-packages))))
+         [relevant-packages (set-subtract all-package-names bundled-packages)])
+    (make-immutable-hash (set-map relevant-packages
+                                  (lambda (pkg-name)
+                                    (let* ([pkg-hash-table (hash-ref ht pkg-name)]
+                                           [pkg-kept-deps (filter (lambda (pkg-name)
+                                                                    (not (set-member? bundled-packages pkg-name)))
+                                                                  (hash-ref pkg-hash-table 'dependencies))])
+                                      `(,pkg-name . ,(hash-set pkg-hash-table 'dependencies pkg-kept-deps))))))))
 
 ;; Assume irrelevant deps have been removed
 ;; Construct a graph in which an edge v -> u denotes that u depends on v
