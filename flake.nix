@@ -16,8 +16,6 @@
         pkgs = nixpkgs.legacyPackages.${system};
         l = pkgs.lib // builtins;
 
-        # TODO: should we worry about acquiring sha256?
-
         converter = pkgs.writeScriptBin "convert-catalog-to-json" ''
           #!/usr/bin/env bash
           set -eou pipefail
