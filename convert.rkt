@@ -45,15 +45,13 @@
                            (hash-update pkg-hash-table
                                         'dependencies
                                         (lambda (dependencies)
-                                          (make-immutable-hash (map (lambda (dep)
-                                                                      (if (string? dep)
-                                                                          `(,dep . "default")
-                                                                          (let ((dep-name (car dep))
-                                                                                (version (if (memq '#:version dep)
-                                                                                             (cadr (memq '#:version dep))
-                                                                                             "default")))
-                                                                            `(,dep-name . ,version))))
-                                                                    dependencies))))))))
+                                          ;; Ignore version since
+                                          ;; 1. presumably upstream nixpkgs keeps Racket reasonably up to date
+                                          ;; 2. Racket's versioning of packages makes no sense
+                                          (map (match-lambda
+                                                 [(cons dep-name _) dep-name]
+                                                 [dep-name dep-name])
+                                               dependencies)))))))
 
 ;; Return a copy of the input hash table that
 ;; 1. does not have any packages tagged "main-distribution" or "main-test"
@@ -75,14 +73,11 @@
                                                      bundled-packages))])
     (make-immutable-hash (map (lambda (pkg-name)
                                 (let* ([pkg-hash-table (hash-ref ht pkg-name)]
-                                       [pkg-deps (hash->list (hash-ref pkg-hash-table 'dependencies))]
-                                       [pkg-kept-deps (filter (match-lambda
-                                                                [(cons pkg-name _)
-                                                                 (not (set-member? bundled-packages pkg-name))])
-                                                              pkg-deps)]
-                                       [final-pkg-deps (make-immutable-hash pkg-kept-deps)])
+                                       [pkg-kept-deps (filter (lambda (pkg-name)
+                                                                (not (set-member? bundled-packages pkg-name)))
+                                                              (hash-ref pkg-hash-table 'dependencies))])
                                   (cons pkg-name
-                                        (hash-set pkg-hash-table 'dependencies final-pkg-deps))))
+                                        (hash-set pkg-hash-table 'dependencies pkg-kept-deps))))
                               relevant-packages))))
 
 ;; Assume irrelevant deps have been removed
@@ -104,7 +99,7 @@
                                          ;; default value here.
                                          '()))
                           accum
-                          (hash-keys dependencies))])
+                          dependencies)])
                  (make-immutable-hash (map (lambda (pkg-name)
                                              `(,pkg-name . ()))
                                            (hash-keys ht)))
