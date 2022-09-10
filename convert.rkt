@@ -60,16 +60,17 @@
 ;; 2. ensures that any such packages are also removed from the dependency list of all remaining packages
 (define (keep-only-relevant-deps ht)
   (let* ([all-package-names (apply set (hash-keys ht))]
-         [bundled-packages (set-add (apply set (stream->list
-                                                (sequence-filter
-                                                 (lambda (pkg-name)
-                                                   (ormap (lambda (tag)
-                                                            ;; XXX: would prefer to use memq, but tag is mutable for some reason
-                                                            (member tag main-tags))
-                                                          (hash-ref (hash-ref ht pkg-name) 'tags)))
-                                                 all-package-names)))
-                                    ;; Some people add racket itself as a dependency for some reason
-                                    "racket")]
+         [bundled-packages (apply set
+                                  ;; Some people add racket itself as a dependency for some reason
+                                  "racket"
+                                  (stream->list
+                                   (sequence-filter
+                                    (lambda (pkg-name)
+                                      (ormap (lambda (tag)
+                                               ;; XXX: would prefer to use memq, but tag is mutable for some reason
+                                               (member tag main-tags))
+                                             (hash-ref (hash-ref ht pkg-name) 'tags)))
+                                    all-package-names)))]
          [relevant-packages (set->list (set-subtract all-package-names
                                                      bundled-packages))])
     (make-immutable-hash (map (lambda (pkg-name)
