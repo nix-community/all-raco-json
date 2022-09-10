@@ -103,7 +103,7 @@
                                          ;; default value here.
                                          '()))
                           accum
-                          (map car (hash->list dependencies)))])
+                          (hash-keys dependencies))])
                  (make-immutable-hash (map (lambda (pkg-name)
                                              `(,pkg-name . ()))
                                            (hash-keys ht)))
