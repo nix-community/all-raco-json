@@ -7,6 +7,9 @@
 (require racket/set)
 (require racket/stream)
 
+(provide write-catalog
+         test-keep-only-admissible-pkgs)
+
 (define main-tags '("main-distribution" "main-tests"))
 
 ;; Given a pkgs-all file, remove select nodes and also
@@ -14,10 +17,11 @@
 (define (write-catalog pkgs-all-input-path)
   (let* ([original-ht (with-input-from-file pkgs-all-input-path read)]
          [admissible-pkg-set (keep-only-admissible-pkgs (keep-only-relevant-deps (reshape-dependencies original-ht)))]
-         [final-ht (make-immutable-hash
-                    (set-map admissible-pkg-set
-                             (lambda (pkg-name)
-                               `(,pkg-name . ,(hash-ref original-ht pkg-name)))))])
+         [final-ht (reshape-dependencies
+                    (make-immutable-hash
+                     (set-map admissible-pkg-set
+                              (lambda (pkg-name)
+                                `(,pkg-name . ,(hash-ref original-ht pkg-name))))))])
     (with-output-to-file "pkgs-all"
       (lambda ()
         (write final-ht))
@@ -42,16 +46,31 @@
   (hash-map/copy ht
                  (lambda (pkg-name pkg-hash-table)
                    (values pkg-name
-                           (hash-update pkg-hash-table
-                                        'dependencies
-                                        (lambda (dependencies)
-                                          ;; Ignore version since
-                                          ;; 1. presumably upstream nixpkgs keeps Racket reasonably up to date
-                                          ;; 2. Racket's versioning of packages makes no sense
-                                          (map (match-lambda
-                                                 [(cons dep-name _) dep-name]
-                                                 [dep-name dep-name])
-                                               dependencies)))))))
+                           (let* ([pkg-hash-table-with-simplified-deps
+                                   (hash-update pkg-hash-table
+                                                'dependencies
+                                                (lambda (dependencies)
+                                                  ;; Ignore version since
+                                                  ;; 1. presumably upstream nixpkgs keeps Racket reasonably up to date
+                                                  ;; 2. Racket's versioning of packages makes no sense
+                                                  (map (match-lambda
+                                                         [(or (cons dep-name _) dep-name)
+                                                          dep-name])
+                                                       dependencies)))]
+                                  [pkg-hash-table-with-overwritten-source
+                                   (hash-set pkg-hash-table-with-simplified-deps
+                                             'source
+                                             (hash-ref (hash-ref (hash-ref
+                                                                  pkg-hash-table-with-simplified-deps
+                                                                  'versions) 'default) 'source_url))]
+
+                                  [pkg-hash-table-with-no-old-versions
+                                   (hash-update pkg-hash-table-with-overwritten-source
+                                                'versions
+                                                (match-lambda
+                                                  [(hash-table ('default default-ht))
+                                                   (make-immutable-hash `((default . ,default-ht)))]))])
+                             pkg-hash-table-with-no-old-versions)))))
 
 ;; Return a copy of the input hash table that
 ;; 1. does not have any packages tagged "main-distribution" or "main-test"
@@ -155,7 +174,7 @@
                   inadmissible-packages)))
 
 (define (test-keep-only-admissible-pkgs)
-  (let* ([ht (with-input-from-file "pkgs-all" read)]
+  (let* ([ht (with-input-from-file "input-pkgs-all" read)]
          [relevant-packages-ht (keep-only-relevant-deps (reshape-dependencies ht))]
          [admissible-packages (keep-only-admissible-pkgs relevant-packages-ht)])
     (sequence-fold (lambda (acc pkg-name)
