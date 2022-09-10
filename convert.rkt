@@ -178,17 +178,14 @@
          [relevant-packages-ht (keep-only-relevant-deps (reshape-dependencies ht))]
          [admissible-packages (keep-only-admissible-pkgs relevant-packages-ht)])
     (sequence-fold (lambda (acc pkg-name)
-                     (sequence-fold (lambda (accum dep)
-                                      (and accum
-                                           (let ([dep-name (match dep
-                                                             [(cons name _) name]
-                                                             [name name])])
-                                             (or
-                                              (string=? dep-name "racket")
-                                              (ormap (lambda (tag)
-                                                       (member tag main-tags))
-                                                     (hash-ref (hash-ref ht dep-name) 'tags))
-                                              (set-member? admissible-packages dep-name)))))
+                     (sequence-fold (match-lambda** [(accum (or (cons dep-name _) dep-name))
+                                                     (and accum
+                                                          (or
+                                                           (string=? dep-name "racket")
+                                                           (ormap (lambda (tag)
+                                                                    (member tag main-tags))
+                                                                  (hash-ref (hash-ref ht dep-name) 'tags))
+                                                           (set-member? admissible-packages dep-name)))])
                                     acc
                                     (hash-ref (hash-ref ht pkg-name) 'dependencies)))
                    #t
