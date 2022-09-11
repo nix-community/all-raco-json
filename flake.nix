@@ -4,9 +4,6 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
-    racket-catalog.url = "path:./pkgs-all";
-    racket-catalog.flake = false;
-
     flake-utils.url = "github:numtide/flake-utils";
   };
 
