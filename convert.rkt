@@ -1,5 +1,6 @@
 #lang racket/base
 
+(require racket/contract)
 (require racket/file)
 (require racket/function)
 (require racket/match)
@@ -7,8 +8,7 @@
 (require racket/set)
 (require racket/stream)
 
-(provide write-catalog
-         test-keep-only-admissible-pkgs)
+(provide write-catalog)
 
 (define main-tags '("main-distribution" "main-tests"))
 
@@ -148,29 +148,28 @@
     (set-subtract (list->set (hash-keys reverse-graph-with-dummy-node))
                   inadmissible-packages)))
 
-(define (test-keep-only-admissible-pkgs)
-  (let* ([ht (with-input-from-file "input-pkgs-all" read)]
-         [relevant-packages-ht (keep-only-relevant-deps (reshape-dependencies ht))]
-         [admissible-packages (keep-only-admissible-pkgs relevant-packages-ht)])
-    (sequence-fold (lambda (acc pkg-name)
-                     (sequence-fold (match-lambda** [(accum (or (cons dep-name _) dep-name))
-                                                     (and accum
-                                                          (or
-                                                           (string=? dep-name "racket")
-                                                           (ormap (lambda (tag)
-                                                                    (member tag main-tags))
-                                                                  (hash-ref (hash-ref ht dep-name) 'tags))
-                                                           (set-member? admissible-packages dep-name)))])
-                                    acc
-                                    (hash-ref (hash-ref ht pkg-name) 'dependencies)))
-                   #t
-                   admissible-packages)))
+(define/contract (test-keep-only-admissible-pkgs original-ht admissible-pkg-set)
+  (-> hash? set? (not/c #f))
+  (sequence-fold (lambda (acc pkg-name)
+                   (sequence-fold (match-lambda** [(accum (or (cons dep-name _) dep-name))
+                                                   (and accum
+                                                        (or
+                                                         (string=? dep-name "racket")
+                                                         (ormap (lambda (tag)
+                                                                  (member tag main-tags))
+                                                                (hash-ref (hash-ref original-ht dep-name) 'tags))
+                                                         (set-member? admissible-pkg-set dep-name)))])
+                                  acc
+                                  (hash-ref (hash-ref original-ht pkg-name) 'dependencies)))
+                 #t
+                 admissible-pkg-set))
 
 ;; Given a pkgs-all file, remove select nodes and also
 ;; generate files according to the catalog directory structure
 (define (write-catalog pkgs-all-input-path)
   (let* ([original-ht (with-input-from-file pkgs-all-input-path read)]
          [admissible-pkg-set (keep-only-admissible-pkgs (keep-only-relevant-deps (reshape-dependencies original-ht)))]
+         [_ (test-keep-only-admissible-pkgs original-ht admissible-pkg-set)]
          [final-ht (reshape-dependencies
                     (make-immutable-hash
                      (set-map admissible-pkg-set
