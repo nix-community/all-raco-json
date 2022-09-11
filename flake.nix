@@ -4,13 +4,10 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
-    write-catalog.url = "path:write-catalog.rkt";
-    write-catalog.flake = false;
-
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, write-catalog, ...}:
+  outputs = { self, nixpkgs, flake-utils, ...}:
     flake-utils.lib.eachSystem [ flake-utils.lib.system.x86_64-linux ] (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -19,7 +16,7 @@
         pruner = pkgs.writeScriptBin "prune-catalog" ''
           #!/usr/bin/env bash
           set -eou pipefail
-          ${pkgs.racket}/bin/racket -e '(require (file "${write-catalog}")) (write-catalog "pkgs-all")'
+          ${pkgs.racket}/bin/racket -e '(require (file "${./write-catalog.rkt}")) (write-catalog "pkgs-all")'
         '';
       in
         {

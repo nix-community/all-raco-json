@@ -33,21 +33,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
-        "write-catalog": "write-catalog"
-      }
-    },
-    "write-catalog": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1,
-        "narHash": "sha256-1Ee/a4QXT7whKPWSWpx9bRY/SxlriX9SRokYZ+hfx4U=",
-        "path": "write-catalog.rkt",
-        "type": "path"
-      },
-      "original": {
-        "path": "write-catalog.rkt",
-        "type": "path"
+        "nixpkgs": "nixpkgs"
       }
     }
   },
