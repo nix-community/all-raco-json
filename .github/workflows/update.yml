@@ -36,7 +36,7 @@ jobs:
 
         wget https://pkgs.racket-lang.org/pkgs-all
 
-        nix run --no-write-lock-file -L github:$GITHUB_REPOSITORY -- ./pkgs-all
+        nix run --no-write-lock-file -L github:$GITHUB_REPOSITORY
         nix flake update --no-write-lock-file
 
         git add .
