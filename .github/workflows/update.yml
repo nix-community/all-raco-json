@@ -8,7 +8,7 @@ on:
 
 jobs:
   run:
-    name: update pkgs-all file
+    name: update catalog
     runs-on: ubuntu-latest
     steps:
 
