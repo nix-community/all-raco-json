@@ -34,7 +34,6 @@ jobs:
         git config --local user.email github-actions@github.com
         git config --local user.name github-actions
 
-        rm pkgs-all
         wget https://pkgs.racket-lang.org/pkgs-all
 
         nix run -L github:$GITHUB_REPOSITORY
