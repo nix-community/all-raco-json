@@ -1,5 +1,5 @@
 {
-  description = "JSON representation of the Racket package catalog";
+  description = "Pruned version of the Racket package catalog";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
