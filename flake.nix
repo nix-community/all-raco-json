@@ -13,7 +13,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         l = pkgs.lib // builtins;
 
-        pruner = pkgs.writeScriptBin "prune catalog" ''
+        pruner = pkgs.writeScriptBin "prune-catalog" ''
           #!/usr/bin/env bash
           set -eou pipefail
           ${pkgs.racket}/bin/racket -e '(require (file "convert.rkt")) (write-catalog "pkgs-all")'
