@@ -16,7 +16,7 @@
         pruner = pkgs.writeScriptBin "prune-catalog" ''
           #!/usr/bin/env bash
           set -eou pipefail
-          ${pkgs.racket}/bin/racket -e '(require (file "convert.rkt")) (write-catalog "$1")'
+          ${pkgs.racket}/bin/racket -e '(require (file "write-catalog.rkt")) (write-catalog "$1")'
         '';
       in
         {
