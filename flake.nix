@@ -13,15 +13,15 @@
         pkgs = nixpkgs.legacyPackages.${system};
         l = pkgs.lib // builtins;
 
-        converter = pkgs.writeScriptBin "convert-catalog-to-json" ''
+        pruner = pkgs.writeScriptBin "prune catalog" ''
           #!/usr/bin/env bash
           set -eou pipefail
           ${pkgs.racket}/bin/racket -e '(require (file "convert.rkt")) (write-catalog "pkgs-all")'
         '';
       in
         {
-          packages.default = converter;
-          defaultApp = converter;
+          packages.default = pruner;
+          defaultApp = pruner;
         }
     );
 }
