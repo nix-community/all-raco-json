@@ -1,5 +1,6 @@
 #lang racket/base
 
+(require json)
 (require racket/contract)
 (require racket/file)
 (require racket/function)
@@ -8,7 +9,8 @@
 (require racket/set)
 (require racket/stream)
 
-(provide write-catalog)
+(provide write-catalog
+         generate-json)
 
 (define main-tags '("main-distribution" "main-tests"))
 
@@ -194,3 +196,31 @@
                      (with-output-to-file (string-append-immutable "pkg/" pkg-name)
                        (lambda ()
                          (write pkg-hash-table)))))))
+
+(define (string-keys-to-symbol-keys expr)
+  (cond
+    [(hash? expr) (hash-map/copy expr (lambda (k v)
+                                        (values (if (string? k)
+                                                    (string->symbol k)
+                                                    k)
+                                                (string-keys-to-symbol-keys v))))]
+    [(list? expr) (map string-keys-to-symbol-keys expr)]
+    [else expr]))
+
+(define (symbol-values-to-string-values value)
+  (cond
+    [(symbol? value) (symbol->string value)]
+    [(hash? value) (hash-map/copy value (lambda (k v)
+                                          (values k
+                                                  (symbol-values-to-string-values v))))]
+    [(list? value) (map symbol-values-to-string-values value)]
+    [else value]))
+
+(define (generate-json output-path)
+  (with-output-to-file output-path
+    (lambda ()
+      (let* ([inp0 (with-input-from-file "pkgs-all" read)]
+             [inp1 (string-keys-to-symbol-keys inp0)]
+             [inp2 (symbol-values-to-string-values inp1)])
+        (write-json inp2)))
+    #:exists 'replace))
