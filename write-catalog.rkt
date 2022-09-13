@@ -113,7 +113,7 @@
                                                 ;; or
                                                 ;; "http://github.com/some-user/some-racket-repo/tree/weird.zip"
                                                 ;; where weird.zip is a branch
-                                                (regexp-match #rx"\\.(?:zip|tgz|(?:tar)?\\.gz|plt)$"
+                                                (regexp-match #rx"\\.(?:zip|tgz|(?:tar)?\\.gz)$"
                                                               (hash-ref
                                                                (hash-ref
                                                                 (hash-ref
