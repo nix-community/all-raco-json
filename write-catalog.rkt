@@ -34,7 +34,7 @@
                                              'source
                                              (hash-ref (hash-ref (hash-ref
                                                                   pkg-hash-table-with-simplified-deps
-                                                                  'versions) 'default) 'source_url))]
+                                                                  'versions) 'default) 'source))]
 
                                   [pkg-hash-table-with-no-old-versions
                                    (hash-update pkg-hash-table-with-overwritten-source
@@ -104,10 +104,10 @@
 (define (make-reverse-graph-with-dummy-node ht)
   (let* ([graph (make-reverse-graph ht)]
          ;; Draw edges from the dummy package to any package in the
-         ;; top-level hash table whose source_url doesn't correspond
+         ;; top-level hash table whose source doesn't correspond
          ;; to a git repo
          [non-git-top-level-pkg-names (filter (lambda (pkg-name)
-                                                ;; This should work unless the source_url looks like
+                                                ;; This should work unless the source looks like
                                                 ;; https://some-git-repo.com/my-project.git?path=weird.zip
                                                 ;; where weird.zip is a directory
                                                 ;; or
@@ -118,7 +118,7 @@
                                                                (hash-ref
                                                                 (hash-ref
                                                                  (hash-ref ht pkg-name)
-                                                                 'versions) 'default) 'source_url)))
+                                                                 'versions) 'default) 'source)))
                                               ;; Here we use ht
                                               ;; instead of the graph
                                               ;; keys because the
