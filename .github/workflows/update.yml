@@ -2,8 +2,7 @@ name: "all-raco-json action"
 
 on:
   schedule:
-    # run every Saturday at 03:00
-    - cron: "0 3 * * 6"
+    - cron: "0 0 1 * *"
   workflow_dispatch:
 
 jobs:
