@@ -166,6 +166,15 @@
                  #t
                  admissible-external-pkg-set))
 
+(define (find-main-pkgs ht)
+  (filter (match-lambda
+            [(cons _k (hash-table ('tags tags)))
+             (ormap (lambda (tag)
+                      ;; XXX: would prefer to use memq, but tag is mutable for some reason
+                      (member tag main-tags))
+                    tags)])
+          (hash->list ht)))
+
 ;; Given a pkgs-all file, remove select nodes and also
 ;; generate files according to the catalog directory structure
 (define (write-catalog pkgs-all-input-path)
@@ -174,9 +183,10 @@
          [_ (test-keep-only-admissible-pkgs original-ht admissible-external-pkg-set)]
          [final-ht (reshape-dependencies
                     (make-immutable-hash
-                     (set-map admissible-external-pkg-set
-                              (lambda (pkg-name)
-                                `(,pkg-name . ,(hash-ref original-ht pkg-name))))))])
+                     (append (set-map admissible-external-pkg-set
+                                      (lambda (pkg-name)
+                                        `(,pkg-name . ,(hash-ref original-ht pkg-name))))
+                             (find-main-pkgs original-ht))))])
     (with-output-to-file "pkgs-all"
       (lambda ()
         (write final-ht))
