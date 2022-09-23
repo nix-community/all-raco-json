@@ -52,7 +52,7 @@
 ;; Return a copy of the input hash table that
 ;; 1. does not have any packages tagged "main-distribution" or "main-test"
 ;; 2. ensures that any such packages are also removed from the dependency list of all remaining packages
-(define (keep-only-relevant-deps ht)
+(define (keep-only-external-deps ht)
   (let* ([all-package-names (apply set (hash-keys ht))]
          [bundled-packages (apply set
                                   ;; Some people add racket itself as a dependency for some reason
@@ -138,7 +138,7 @@
               DUMMY-PKG
               immediately-inadmissible-pkgs)))
 
-(define (keep-only-admissible-pkgs ht)
+(define (keep-only-admissible-external-pkgs ht)
   (letrec ([reverse-graph-with-dummy-node (make-reverse-graph-with-dummy-node ht)]
            [dfs (lambda (u seen-nodes)
                   (if (set-member? seen-nodes u)
@@ -150,7 +150,7 @@
     (set-subtract (list->set (hash-keys reverse-graph-with-dummy-node))
                   inadmissible-packages)))
 
-(define/contract (test-keep-only-admissible-pkgs original-ht admissible-pkg-set)
+(define/contract (test-keep-only-admissible-pkgs original-ht admissible-external-pkg-set)
   (-> hash? set? (not/c #f))
   (sequence-fold (lambda (acc pkg-name)
                    (sequence-fold (match-lambda** [(accum (or (cons dep-name _) dep-name))
@@ -160,21 +160,21 @@
                                                          (ormap (lambda (tag)
                                                                   (member tag main-tags))
                                                                 (hash-ref (hash-ref original-ht dep-name) 'tags))
-                                                         (set-member? admissible-pkg-set dep-name)))])
+                                                         (set-member? admissible-external-pkg-set dep-name)))])
                                   acc
                                   (hash-ref (hash-ref original-ht pkg-name) 'dependencies)))
                  #t
-                 admissible-pkg-set))
+                 admissible-external-pkg-set))
 
 ;; Given a pkgs-all file, remove select nodes and also
 ;; generate files according to the catalog directory structure
 (define (write-catalog pkgs-all-input-path)
   (let* ([original-ht (with-input-from-file pkgs-all-input-path read)]
-         [admissible-pkg-set (keep-only-admissible-pkgs (keep-only-relevant-deps (reshape-dependencies original-ht)))]
-         [_ (test-keep-only-admissible-pkgs original-ht admissible-pkg-set)]
+         [admissible-external-pkg-set (keep-only-admissible-external-pkgs (keep-only-external-deps (reshape-dependencies original-ht)))]
+         [_ (test-keep-only-admissible-pkgs original-ht admissible-external-pkg-set)]
          [final-ht (reshape-dependencies
                     (make-immutable-hash
-                     (set-map admissible-pkg-set
+                     (set-map admissible-external-pkg-set
                               (lambda (pkg-name)
                                 `(,pkg-name . ,(hash-ref original-ht pkg-name))))))])
     (with-output-to-file "pkgs-all"
