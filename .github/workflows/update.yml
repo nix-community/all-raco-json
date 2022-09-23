@@ -1,5 +1,8 @@
 name: "all-raco-json action"
 
+# TODO: figure out how to automatically run action after merging
+# something into master
+
 on:
   schedule:
     - cron: "0 0 1 * *"
