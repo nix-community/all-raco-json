@@ -9,8 +9,7 @@
 (require racket/set)
 (require racket/stream)
 
-(provide write-catalog
-         generate-json)
+(provide write-catalog)
 
 (define main-tags '("main-distribution" "main-tests"))
 
@@ -225,12 +224,3 @@
                                                   (symbol-values-to-string-values v))))]
     [(list? value) (map symbol-values-to-string-values value)]
     [else value]))
-
-(define (generate-json output-path)
-  (with-output-to-file output-path
-    (lambda ()
-      (let* ([inp0 (with-input-from-file "pkgs-all" read)]
-             [inp1 (string-keys-to-symbol-keys inp0)]
-             [inp2 (symbol-values-to-string-values inp1)])
-        (write-json inp2)))
-    #:exists 'replace))
