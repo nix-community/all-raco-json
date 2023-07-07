@@ -1,6 +1,5 @@
 #lang racket/base
 
-(require json)
 (require racket/contract)
 (require racket/file)
 (require racket/function)
