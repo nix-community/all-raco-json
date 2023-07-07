@@ -4,6 +4,7 @@
 (require racket/contract)
 (require racket/file)
 (require racket/function)
+(require racket/list)
 (require racket/match)
 (require racket/sequence)
 (require racket/set)
@@ -128,9 +129,9 @@
                                               (hash-keys ht))]
          ;; Draw edges from the dummy package to packages containing
          ;; dependencies like "https://github.com/some-user/some-repo" or "tangerine-x86_64-linux"
-         [pkgs-not-in-catalog (filter (lambda (pkg-name)
-                                        (not (hash-has-key? ht pkg-name)))
-                                      (hash-keys graph))]
+         [pkgs-not-in-catalog (filter-not (lambda (pkg-name)
+                                            (hash-has-key? ht pkg-name))
+                                          (hash-keys graph))]
          [immediately-inadmissible-pkgs (set->list (apply set (append non-git-top-level-pkg-names
                                                                       pkgs-not-in-catalog)))])
     (hash-set graph
