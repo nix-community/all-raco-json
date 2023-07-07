@@ -68,9 +68,9 @@
     (make-immutable-hash (set-map relevant-packages
                                   (lambda (pkg-name)
                                     (let* ([pkg-hash-table (hash-ref ht pkg-name)]
-                                           [pkg-kept-deps (filter (lambda (pkg-name)
-                                                                    (not (set-member? bundled-packages pkg-name)))
-                                                                  (hash-ref pkg-hash-table 'dependencies))])
+                                           [pkg-kept-deps (filter-not (lambda (pkg-name)
+                                                                        (set-member? bundled-packages pkg-name))
+                                                                      (hash-ref pkg-hash-table 'dependencies))])
                                       `(,pkg-name . ,(hash-set pkg-hash-table 'dependencies pkg-kept-deps))))))))
 
 ;; Assume irrelevant deps have been removed
