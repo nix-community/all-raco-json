@@ -20,14 +20,13 @@
                            (let* ([pkg-hash-table-with-simplified-deps
                                    (hash-update pkg-hash-table
                                                 'dependencies
-                                                (lambda (dependencies)
-                                                  ;; Ignore version since
-                                                  ;; 1. presumably upstream nixpkgs keeps Racket reasonably up to date
-                                                  ;; 2. Racket's versioning of packages makes no sense
-                                                  (map (match-lambda
+                                                (curry map
+                                                       ;; Ignore version since
+                                                       ;; 1. presumably upstream nixpkgs keeps Racket reasonably up to date
+                                                       ;; 2. Racket's versioning of packages makes no sense
+                                                       (match-lambda
                                                          [(or (cons dep-name _) dep-name)
-                                                          dep-name])
-                                                       dependencies)))]
+                                                          dep-name])))]
                                   [pkg-hash-table-with-overwritten-source
                                    (hash-set pkg-hash-table-with-simplified-deps
                                              'source
@@ -68,8 +67,7 @@
     (make-immutable-hash (set-map relevant-packages
                                   (lambda (pkg-name)
                                     (let* ([pkg-hash-table (hash-ref ht pkg-name)]
-                                           [pkg-kept-deps (filter-not (lambda (pkg-name)
-                                                                        (set-member? bundled-packages pkg-name))
+                                           [pkg-kept-deps (filter-not (curry set-member? bundled-packages)
                                                                       (hash-ref pkg-hash-table 'dependencies))])
                                       `(,pkg-name . ,(hash-set pkg-hash-table 'dependencies pkg-kept-deps))))))))
 
@@ -128,8 +126,7 @@
                                               (hash-keys ht))]
          ;; Draw edges from the dummy package to packages containing
          ;; dependencies like "https://github.com/some-user/some-repo" or "tangerine-x86_64-linux"
-         [pkgs-not-in-catalog (filter-not (lambda (pkg-name)
-                                            (hash-has-key? ht pkg-name))
+         [pkgs-not-in-catalog (filter-not (curry hash-has-key? ht)
                                           (hash-keys graph))]
          [immediately-inadmissible-pkgs (set->list (apply set (append non-git-top-level-pkg-names
                                                                       pkgs-not-in-catalog)))])
