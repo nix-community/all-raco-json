@@ -1,4 +1,4 @@
-name: "all-raco-json action"
+name: "pruned-racket-catalog action"
 
 # TODO: figure out how to automatically run action after merging
 # something into master
