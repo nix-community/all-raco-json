@@ -41,10 +41,9 @@
                                                   [(hash-table ('default default-ht))
                                                    (make-immutable-hash `((default . ,default-ht)))]))]
                                   [pkg-hash-table-with-no-timestamp-fields
-                                   (foldl (lambda (field-to-remove accum)
-                                            (hash-remove accum field-to-remove))
-                                          pkg-hash-table-with-no-old-versions
-                                          '(last-checked last-edit last-updated))])
+                                   (sequence-fold hash-remove
+                                                  pkg-hash-table-with-no-old-versions
+                                                  '(last-checked last-edit last-updated))])
                              pkg-hash-table-with-no-timestamp-fields)))))
 
 ;; Return a copy of the input hash table that
