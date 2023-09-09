@@ -147,19 +147,15 @@
 
 (define/contract (test-keep-only-admissible-pkgs original-ht admissible-external-pkg-set)
   (-> hash? set? (not/c #f))
-  (sequence-fold (lambda (acc pkg-name)
-                   (sequence-fold (match-lambda** [(accum (or (cons dep-name _) dep-name))
-                                                   (and accum
-                                                        (or
-                                                         (string=? dep-name "racket")
-                                                         (ormap (lambda (tag)
-                                                                  (member tag main-tags))
-                                                                (hash-ref (hash-ref original-ht dep-name) 'tags))
-                                                         (set-member? admissible-external-pkg-set dep-name)))])
-                                  acc
-                                  (hash-ref (hash-ref original-ht pkg-name) 'dependencies)))
-                 #t
-                 admissible-external-pkg-set))
+  (andmap (lambda (pkg-name)
+            (andmap (match-lambda [(or (cons dep-name _) dep-name)
+                                   (or (string=? dep-name "racket")
+                                       (ormap (lambda (tag)
+                                                (member tag main-tags))
+                                              (hash-ref (hash-ref original-ht dep-name) 'tags))
+                                       (set-member? admissible-external-pkg-set dep-name))])
+                    (hash-ref (hash-ref original-ht pkg-name) 'dependencies)))
+          (set->list admissible-external-pkg-set)))
 
 (define (find-main-pkgs ht)
   (filter (match-lambda
