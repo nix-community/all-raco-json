@@ -57,9 +57,7 @@
                                   (stream->list
                                    (sequence-filter
                                     (lambda (pkg-name)
-                                      (ormap (lambda (tag)
-                                               ;; XXX: would prefer to use memq, but tag is mutable for some reason
-                                               (member tag main-tags))
+                                      (ormap (curry index-of main-tags)
                                              (hash-ref (hash-ref ht pkg-name) 'tags)))
                                     all-package-names)))]
          [relevant-packages (set-subtract all-package-names bundled-packages)])
@@ -90,9 +88,7 @@
                                          '()))
                           accum
                           dependencies)])
-                 (make-immutable-hash (map (lambda (pkg-name)
-                                             `(,pkg-name . ()))
-                                           (hash-keys ht)))
+                 (make-immutable-hash (map list (hash-keys ht)))
                  ht))
 
 (define DUMMY-PKG "nix-dummy-pkg")
@@ -150,8 +146,7 @@
   (andmap (lambda (pkg-name)
             (andmap (match-lambda [(or (cons dep-name _) dep-name)
                                    (or (string=? dep-name "racket")
-                                       (ormap (lambda (tag)
-                                                (member tag main-tags))
+                                       (ormap (curry index-of main-tags)
                                               (hash-ref (hash-ref original-ht dep-name) 'tags))
                                        (set-member? admissible-external-pkg-set dep-name))])
                     (hash-ref (hash-ref original-ht pkg-name) 'dependencies)))
@@ -160,9 +155,7 @@
 (define (find-main-pkgs ht)
   (filter (match-lambda
             [(cons _k (hash-table ('tags tags)))
-             (ormap (lambda (tag)
-                      ;; XXX: would prefer to use memq, but tag is mutable for some reason
-                      (member tag main-tags))
+             (ormap (curry index-of main-tags)
                     tags)])
           (hash->list ht)))
 
