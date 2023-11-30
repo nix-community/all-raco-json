@@ -190,22 +190,3 @@
                      (with-output-to-file (string-append-immutable "pkg/" pkg-name)
                        (lambda ()
                          (write pkg-hash-table)))))))
-
-(define (string-keys-to-symbol-keys expr)
-  (cond
-    [(hash? expr) (hash-map/copy expr (lambda (k v)
-                                        (values (if (string? k)
-                                                    (string->symbol k)
-                                                    k)
-                                                (string-keys-to-symbol-keys v))))]
-    [(list? expr) (map string-keys-to-symbol-keys expr)]
-    [else expr]))
-
-(define (symbol-values-to-string-values value)
-  (cond
-    [(symbol? value) (symbol->string value)]
-    [(hash? value) (hash-map/copy value (lambda (k v)
-                                          (values k
-                                                  (symbol-values-to-string-values v))))]
-    [(list? value) (map symbol-values-to-string-values value)]
-    [else value]))
